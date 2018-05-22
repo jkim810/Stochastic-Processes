@@ -1,0 +1,356 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>ECE302 MATLAB Exercise: Estimation Techniques</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2018-03-28"><meta name="DC.source" content="stoch1ver2.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h1>ECE302 MATLAB Exercise: Estimation Techniques</h1><!--introduction--><p>David Kim, Junbum Kim</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">SCENARIO1</a></li><li><a href="#2">1.a</a></li><li><a href="#3">1.b</a></li><li><a href="#4">1.c</a></li><li><a href="#5">1.d</a></li><li><a href="#6">SCENARIO 2</a></li></ul></div><h2>SCENARIO1<a name="1"></a></h2><pre class="codeinput">clc; clear <span class="string">all</span>; close <span class="string">all</span>;
+
+itr = 1000;
+measurements = 200;
+mu_v = 0;
+var_v = 3;
+sig_v = sqrt(var_v);
+v = normrnd(mu_v, sig_v, itr, measurements);
+</pre><h2>1.a<a name="2"></a></h2><p>since both v and theta have distinct mean and variances, assume independence. Given that the two Gaussian random variables are independent, the two variables are jointly Gaussian. For jointly Gaussian random variables, the mmse estimator is linear.</p><pre class="codeinput">mu_theta = 10;
+var_theta = 5;
+theta = normrnd(mu_theta, sqrt(var_theta), itr, 1);
+theta = repmat(theta,1,measurements);
+h = 0.5;
+x =  h*theta + v;
+mf = repmat(1:measurements,itr,1);
+x = cumsum(x,2)./mf;
+theta_mmse = mu_theta + repmat(h*var_theta./(h^2*var_theta+var_v./(1:measurements)),itr,1).*(x-h*mu_theta);   <span class="comment">% MMSE of theta at corresponding iteration and measurement.</span>
+mmse= mean((theta-theta_mmse).^2);   <span class="comment">% MSE for MMSE</span>
+</pre><h2>1.b<a name="3"></a></h2><pre class="codeinput"><span class="comment">% MLE of theta is value which maximizes the probability of observations of</span>
+<span class="comment">% X made given the distribution of v. This is obtained by finding the</span>
+<span class="comment">% maximum of log likelihood function, i.e. zero derivative.</span>
+<span class="comment">% For this case,it is found MLE @ nth measurement = mean of first n measurements/h.</span>
+
+theta_mle = cumsum(x/h,2)./mf;
+mle = mean((theta-theta_mle).^2);
+</pre><h2>1.c<a name="4"></a></h2><pre class="codeinput">plot(1:measurements,mmse,1:measurements,mle);
+title(<span class="string">'MSE of MMSE and MLE'</span>);
+xlabel(<span class="string">'Number of Measurements'</span>)
+ylabel(<span class="string">'MSE'</span>)
+legend(<span class="string">'MMSE'</span>,<span class="string">'MLE'</span>)
+ylim([0 5])
+
+<span class="comment">% It is observed that MMSE method is much less sensitive to poor SNR</span>
+<span class="comment">% compared to MLE method.</span>
+</pre><img vspace="5" hspace="5" src="stoch1ver2_01.png" alt=""> <h2>1.d<a name="5"></a></h2><pre class="codeinput"><span class="comment">% Assume two wrong priors with same mean: 1. Uniform distribution, 2.</span>
+<span class="comment">% Exponential distribution</span>
+
+theta_u = 2*mu_theta*rand(itr,1);
+theta_u = repmat(theta_u,1,measurements);       <span class="comment">% Uniform distribution</span>
+
+theta_exp = exprnd(mu_theta,itr,1);
+theta_exp = repmat(theta_exp,1,measurements);    <span class="comment">% Exponential distribution</span>
+
+mmse_u= mean((theta_u-theta_mmse).^2);      <span class="comment">% MSE for MMSE with Uniform as wrong prior</span>
+mmse_exp= mean((theta_exp-theta_mmse).^2);  <span class="comment">% MSE for MMSE with Exponential as wrong prior</span>
+
+figure;
+plot(1:measurements,mmse,1:measurements,mmse_u,1:measurements,mmse_exp);
+title(<span class="string">'MSE for MMSE with wrong priors'</span>);
+xlabel(<span class="string">'Number of Measurements'</span>)
+ylabel(<span class="string">'MSE'</span>)
+legend(<span class="string">'MMSE - Correct Prior'</span>, <span class="string">'MMSE - Incorrect Prior (Uniform)'</span>, <span class="string">'MMSE - Incorrect Prior (Exponential)'</span>);
+
+<span class="comment">% It is worth noting that more measurements do not improve the MSE if the</span>
+<span class="comment">% give prior is incorrect, which makes sense since the information obtained</span>
+<span class="comment">% from measurements is incorrect.</span>
+</pre><img vspace="5" hspace="5" src="stoch1ver2_02.png" alt=""> <h2>SCENARIO 2<a name="6"></a></h2><pre class="codeinput"><span class="comment">% pdf1 = @(x_n, sigma_n) 0.5*(normpdf(x_n,-1,sigma_n)+normpdf(x_n,1,sigma_n));</span>
+<span class="comment">% pdf2 = @(x_n, sigma_n) 0.25*(normpdf(x_n,-2,sigma_n)+normpdf(x_n,2,sigma_n)+2*normpdf(x_n,0,sigma_n));</span>
+<span class="comment">% For some reason, using the normpdf function drastically increases the</span>
+<span class="comment">% execution time, so the following equations are used as pdf.</span>
+
+pdf1 = @(x_n, sigma_n) 0.5 * 1/(sqrt(2*pi)*sigma_n) * (exp(-(x_n - 1).^2/(2*sigma_n^2)) + exp(-(x_n + 1).^2/(2*sigma_n^2)));
+pdf2 = @(x_n, sigma_n) 0.5 * 1/(sqrt(2*pi)*sigma_n) * exp(-(x_n).^2/(2*sigma_n^2)) + 0.25 * 1/(sqrt(2*pi)*sigma_n)*(exp(-(x_n - 2).^2/(2*sigma_n^2)) + exp(-(x_n + 2).^2/(2*sigma_n^2)));
+
+n = 100;
+t1 = 10;
+t2 = 80;
+
+nvar = logspace(-1.5, 3.5, 40);
+p = zeros(1, length(nvar));
+net_cost = zeros(1, length(nvar));
+
+<span class="keyword">for</span> i = 1:length(nvar)
+    sigma_n = sqrt(nvar(i));
+    trials = 100;
+    count = 0;
+    cost = 0;
+
+    <span class="keyword">for</span> j = 1:trials
+        signal = randi(2,1,n);
+        signal(signal == 2) = -1;
+        interference = zeros(1,n);
+        interference_add = randi(2,1,t2-t1+1);
+        interference_add(interference_add == 2) = -1;
+        interference(t1:t2) = interference_add;
+
+        noise = randn([1,n]) * sigma_n;
+        recv = signal + interference + noise;
+
+        ml = -1000000;
+        max_t1 = -1;
+        max_t2 = -1;
+
+        <span class="keyword">for</span> t1e = 1:n-9         <span class="comment">% interference range is 10-80 symbols</span>
+            <span class="keyword">for</span> t2e = t1e+9:n
+                <span class="keyword">if</span> t2e-t1e&gt;79
+                    <span class="keyword">break</span>
+                <span class="keyword">end</span>
+                max_likelihood = likelihood(recv, sigma_n, t1e, t2e, pdf1, pdf2);
+                <span class="keyword">if</span> max_likelihood &gt; ml
+                    ml = max_likelihood;
+                    max_t1 = t1e;
+                    max_t2 = t2e;
+                <span class="keyword">end</span>
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+
+        <span class="keyword">if</span>(max_t1 == t1) &amp;&amp; (max_t2 == t2)
+            count = count + 1;
+        <span class="keyword">else</span>
+            cost = abs(max_t1 - t1) + abs(max_t2 - t2);
+        <span class="keyword">end</span>
+        net_cost(i) = net_cost(i)+cost;
+    <span class="keyword">end</span>
+    net_cost(i) = net_cost(i)/trials;
+    p(i) = count/trials;
+<span class="keyword">end</span>
+
+SNR = 1./nvar;
+figure;
+plot(SNR, p);
+xlabel(<span class="string">'SNR'</span>);
+ylabel(<span class="string">'Probability'</span>);
+title(<span class="string">'Probability of Success vs SNR'</span>);
+figure;
+semilogy(SNR, net_cost);
+xlabel(<span class="string">'SNR'</span>);
+ylabel(<span class="string">'Cost (logscale)'</span>);
+title(<span class="string">'Linear Cost on Logscale vs SNR'</span>);
+</pre><img vspace="5" hspace="5" src="stoch1ver2_03.png" alt=""> <img vspace="5" hspace="5" src="stoch1ver2_04.png" alt=""> <p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% ECE302 MATLAB Exercise: Estimation Techniques
+% David Kim, Junbum Kim
+
+%% SCENARIO1
+
+clc; clear all; close all;
+
+itr = 1000;
+measurements = 200;
+mu_v = 0;
+var_v = 3;
+sig_v = sqrt(var_v);
+v = normrnd(mu_v, sig_v, itr, measurements);
+
+%% 1.a
+% since both v and theta have distinct mean and variances, assume
+% independence. Given that the two Gaussian random variables are
+% independent, the two variables are jointly Gaussian. For jointly Gaussian
+% random variables, the mmse estimator is linear.
+mu_theta = 10;
+var_theta = 5;
+theta = normrnd(mu_theta, sqrt(var_theta), itr, 1);
+theta = repmat(theta,1,measurements);
+h = 0.5;
+x =  h*theta + v;
+mf = repmat(1:measurements,itr,1);
+x = cumsum(x,2)./mf;
+theta_mmse = mu_theta + repmat(h*var_theta./(h^2*var_theta+var_v./(1:measurements)),itr,1).*(x-h*mu_theta);   % MMSE of theta at corresponding iteration and measurement.
+mmse= mean((theta-theta_mmse).^2);   % MSE for MMSE 
+
+%% 1.b
+
+% MLE of theta is value which maximizes the probability of observations of
+% X made given the distribution of v. This is obtained by finding the
+% maximum of log likelihood function, i.e. zero derivative.
+% For this case,it is found MLE @ nth measurement = mean of first n measurements/h.
+
+theta_mle = cumsum(x/h,2)./mf;
+mle = mean((theta-theta_mle).^2);
+
+%% 1.c
+
+plot(1:measurements,mmse,1:measurements,mle);
+title('MSE of MMSE and MLE');
+xlabel('Number of Measurements')
+ylabel('MSE')
+legend('MMSE','MLE')
+ylim([0 5])
+
+% It is observed that MMSE method is much less sensitive to poor SNR
+% compared to MLE method.
+
+%% 1.d
+
+% Assume two wrong priors with same mean: 1. Uniform distribution, 2.
+% Exponential distribution
+
+theta_u = 2*mu_theta*rand(itr,1);   
+theta_u = repmat(theta_u,1,measurements);       % Uniform distribution
+
+theta_exp = exprnd(mu_theta,itr,1);
+theta_exp = repmat(theta_exp,1,measurements);    % Exponential distribution
+
+mmse_u= mean((theta_u-theta_mmse).^2);      % MSE for MMSE with Uniform as wrong prior
+mmse_exp= mean((theta_exp-theta_mmse).^2);  % MSE for MMSE with Exponential as wrong prior
+
+figure;
+plot(1:measurements,mmse,1:measurements,mmse_u,1:measurements,mmse_exp);
+title('MSE for MMSE with wrong priors');
+xlabel('Number of Measurements')
+ylabel('MSE')
+legend('MMSE - Correct Prior', 'MMSE - Incorrect Prior (Uniform)', 'MMSE - Incorrect Prior (Exponential)');
+
+% It is worth noting that more measurements do not improve the MSE if the
+% give prior is incorrect, which makes sense since the information obtained
+% from measurements is incorrect.
+
+%% SCENARIO 2
+
+% pdf1 = @(x_n, sigma_n) 0.5*(normpdf(x_n,-1,sigma_n)+normpdf(x_n,1,sigma_n));
+% pdf2 = @(x_n, sigma_n) 0.25*(normpdf(x_n,-2,sigma_n)+normpdf(x_n,2,sigma_n)+2*normpdf(x_n,0,sigma_n));
+% For some reason, using the normpdf function drastically increases the
+% execution time, so the following equations are used as pdf.
+
+pdf1 = @(x_n, sigma_n) 0.5 * 1/(sqrt(2*pi)*sigma_n) * (exp(-(x_n - 1).^2/(2*sigma_n^2)) + exp(-(x_n + 1).^2/(2*sigma_n^2)));
+pdf2 = @(x_n, sigma_n) 0.5 * 1/(sqrt(2*pi)*sigma_n) * exp(-(x_n).^2/(2*sigma_n^2)) + 0.25 * 1/(sqrt(2*pi)*sigma_n)*(exp(-(x_n - 2).^2/(2*sigma_n^2)) + exp(-(x_n + 2).^2/(2*sigma_n^2)));
+
+n = 100;
+t1 = 10;
+t2 = 80;
+
+nvar = logspace(-1.5, 3.5, 40);
+p = zeros(1, length(nvar));
+net_cost = zeros(1, length(nvar));
+
+for i = 1:length(nvar)
+    sigma_n = sqrt(nvar(i));
+    trials = 100;
+    count = 0;
+    cost = 0;
+    
+    for j = 1:trials
+        signal = randi(2,1,n);
+        signal(signal == 2) = -1;
+        interference = zeros(1,n);
+        interference_add = randi(2,1,t2-t1+1);
+        interference_add(interference_add == 2) = -1;
+        interference(t1:t2) = interference_add;
+        
+        noise = randn([1,n]) * sigma_n;
+        recv = signal + interference + noise;
+        
+        ml = -1000000;
+        max_t1 = -1;
+        max_t2 = -1;
+        
+        for t1e = 1:n-9         % interference range is 10-80 symbols
+            for t2e = t1e+9:n
+                if t2e-t1e>79
+                    break
+                end
+                max_likelihood = likelihood(recv, sigma_n, t1e, t2e, pdf1, pdf2);
+                if max_likelihood > ml
+                    ml = max_likelihood;
+                    max_t1 = t1e;
+                    max_t2 = t2e;
+                end
+            end
+        end
+        
+        if(max_t1 == t1) && (max_t2 == t2)
+            count = count + 1;
+        else
+            cost = abs(max_t1 - t1) + abs(max_t2 - t2);
+        end
+        net_cost(i) = net_cost(i)+cost;
+    end
+    net_cost(i) = net_cost(i)/trials;
+    p(i) = count/trials;
+end
+
+SNR = 1./nvar;
+figure;
+plot(SNR, p);
+xlabel('SNR');
+ylabel('Probability');
+title('Probability of Success vs SNR');
+figure;
+semilogy(SNR, net_cost);
+xlabel('SNR');
+ylabel('Cost (logscale)');
+title('Linear Cost on Logscale vs SNR');
+
+
+
+##### SOURCE END #####
+--></body></html>
